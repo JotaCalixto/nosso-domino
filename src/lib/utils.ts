@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function slugToEmail(slug: string): string {
-  return `${slug.toLowerCase()}@nossodominó.app`;
+  return `${slug.toLowerCase()}@nossodomimino.app`;
 }
 
 export function formatDate(date: string): string {
