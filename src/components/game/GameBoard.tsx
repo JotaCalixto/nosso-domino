@@ -8,37 +8,43 @@ interface GameBoardProps {
 }
 
 const TILES_PER_ROW = 5;
-const SEGMENT = TILES_PER_ROW + 1; // 5 horizontal + 1 corner
+const TILE_GAP = 3;
+// sm horizontal tile: 56×28 | sm vertical tile: 28×56
+const TILE_W = 56;
+const CORNER_W = 28;
+// Full board width = 5 tiles + 1 corner slot + 5 gaps
+const BOARD_W = TILES_PER_ROW * TILE_W + CORNER_W + TILES_PER_ROW * TILE_GAP;
+const ROW_GAP = 10;
 
-// sm sizes: horizontal tile = 56×28, vertical tile = 28×56
-const ROW_H   = 28;
-const ROW_GAP = 40; // gap between rows — large enough for crosswise double overflow
-// Corner tile natural height = 56px (no stretching)
-// Corner cell height = ROW_H + ROW_GAP + ROW_H = 28+40+28 = 96px → tile centered with 20px padding
+interface SegmentData {
+  tiles: Tile[];
+  corner: Tile | null;
+  isLTR: boolean;
+}
 
-function getTileProps(idx: number) {
-  const seg = Math.floor(idx / SEGMENT);
-  const pos = idx % SEGMENT;
-  const isCorner = pos === TILES_PER_ROW;
-  const isLTR = seg % 2 === 0;
-  const row = seg + 1; // 1-indexed grid row
+function buildSegments(chain: Tile[]): SegmentData[] {
+  const segments: SegmentData[] = [];
+  let isLTR = true;
+  let posInSeg = 0;
+  let tiles: Tile[] = [];
 
-  if (isCorner) {
-    return {
-      gridColumn: isLTR ? TILES_PER_ROW + 2 : 1,
-      gridRow: `${row} / ${row + 2}`,
-      orientation: "vertical" as const,
-      isCorner: true,
-    };
+  for (const tile of chain) {
+    if (posInSeg < TILES_PER_ROW) {
+      tiles.push(tile);
+      posInSeg++;
+    } else {
+      segments.push({ tiles, corner: tile, isLTR });
+      tiles = [];
+      isLTR = !isLTR;
+      posInSeg = 0;
+    }
   }
 
-  const col = isLTR ? pos + 2 : TILES_PER_ROW + 1 - pos;
-  return {
-    gridColumn: col,
-    gridRow: `${row}`,
-    orientation: "horizontal" as const,
-    isCorner: false,
-  };
+  if (tiles.length > 0) {
+    segments.push({ tiles, corner: null, isLTR });
+  }
+
+  return segments;
 }
 
 export function GameBoard({ chain }: GameBoardProps) {
@@ -50,63 +56,49 @@ export function GameBoard({ chain }: GameBoardProps) {
     );
   }
 
-  // Short chain: simple centered row
+  // Short chain: flat row
   if (chain.length <= TILES_PER_ROW) {
     return (
       <div className="felt-table rounded-2xl" style={{ minHeight: 80, display: "flex", alignItems: "center", justifyContent: "center", padding: "10px 16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-          {chain.map((tile, i) => {
-            const isDouble = tile[0] === tile[1];
-            return <DominoTile key={i} tile={tile} orientation={isDouble ? "vertical" : "horizontal"} size="sm" />;
-          })}
+        <div style={{ display: "flex", alignItems: "center", gap: TILE_GAP }}>
+          {chain.map((tile, i) => (
+            <DominoTile key={i} tile={tile} orientation={tile[0] === tile[1] ? "vertical" : "horizontal"} size="sm" />
+          ))}
         </div>
       </div>
     );
   }
 
-  const numRows = Math.ceil(chain.length / SEGMENT);
+  const segments = buildSegments(chain);
 
   return (
-    <div className="felt-table rounded-2xl" style={{ padding: "14px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div
-        style={{
-          display: "grid",
-          // col 1: left-corner (28px) | cols 2-6: tiles (56px each) | col 7: right-corner (28px)
-          gridTemplateColumns: `28px repeat(${TILES_PER_ROW}, 56px) 28px`,
-          gridTemplateRows: `repeat(${numRows}, ${ROW_H}px)`,
-          rowGap: ROW_GAP,
-          columnGap: 2,
-          overflow: "visible",
-        }}
-      >
-        {chain.map((tile, i) => {
-          const { gridColumn, gridRow, orientation, isCorner } = getTileProps(i);
-          const isDouble = tile[0] === tile[1];
-
-          // Doubles in horizontal runs go crosswise (vertical), corners stay vertical
-          const actualOrientation: "horizontal" | "vertical" =
-            isCorner ? "vertical" : isDouble ? "vertical" : "horizontal";
-
-          return (
-            <div
-              key={i}
-              style={{
-                gridColumn,
-                gridRow,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                overflow: "visible",
-              }}
-            >
+    <div className="felt-table rounded-2xl" style={{ padding: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ width: BOARD_W, display: "flex", flexDirection: "column", gap: ROW_GAP }}>
+        {segments.map((seg, si) => (
+          <div
+            key={si}
+            style={{
+              display: "flex",
+              // LTR: tiles go left→right, corner at right end
+              // RTL (row-reverse): first chain tile appears on RIGHT (adjacent to corner above), corner at left end
+              flexDirection: seg.isLTR ? "row" : "row-reverse",
+              alignItems: "center",
+              gap: TILE_GAP,
+            }}
+          >
+            {seg.tiles.map((tile, i) => (
               <DominoTile
+                key={i}
                 tile={tile}
-                orientation={actualOrientation}
+                orientation={tile[0] === tile[1] ? "vertical" : "horizontal"}
                 size="sm"
               />
-            </div>
-          );
-        })}
+            ))}
+            {seg.corner && (
+              <DominoTile tile={seg.corner} orientation="vertical" size="sm" />
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
