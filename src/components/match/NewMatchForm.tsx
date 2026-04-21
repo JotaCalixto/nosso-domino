@@ -25,17 +25,14 @@ export function NewMatchForm() {
     <div className="w-full flex flex-col items-center gap-8 text-center">
       <div>
         <h1 className="text-gradient-title text-3xl font-bold font-rajdhani">Nova Partida</h1>
-        <p className="text-text-muted mt-2 text-sm">Desafie seu parceiro para uma partida de dominó!</p>
+        <p className="text-text-muted mt-2 text-sm">A partida começa imediatamente para os dois!</p>
       </div>
 
-      <div className="card-premium rounded-2xl p-6 w-full flex flex-col gap-4">
+      <div className="card-premium rounded-2xl p-6 w-full">
         <div className="flex items-center gap-3 p-3 rounded-xl bg-surface-2/50">
           <div className="w-2 h-2 rounded-full bg-jota-400" />
           <span className="text-text-primary text-sm font-medium">Jota vs Iza</span>
         </div>
-        <p className="text-text-muted text-xs">
-          O adversário receberá uma notificação em tempo real para aceitar a partida.
-        </p>
       </div>
 
       {error && (
@@ -47,7 +44,7 @@ export function NewMatchForm() {
         disabled={pending}
         className="btn-primary w-full py-4 text-lg font-semibold rounded-2xl font-rajdhani tracking-wide disabled:opacity-60"
       >
-        {pending ? "Criando partida…" : "✦ Desafiar"}
+        {pending ? "Iniciando partida…" : "✦ Iniciar Partida"}
       </button>
     </div>
   );

@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { PlayerHand } from "./PlayerHand";
 import { GameBoard } from "./GameBoard";
 import { RoundResultModal, MatchVictoryModal } from "./RoundResultModal";
-import { playPiece, drawPiece, passTurn, acceptMatch, abandonMatch } from "@/actions/match";
+import { playPiece, drawPiece, passTurn, abandonMatch } from "@/actions/match";
 import { hasPlayableTile } from "@/engine/validate";
 import type { Tile, BoardState, BoardSide } from "@/engine/types";
 import { getPlayerConfig } from "@/lib/players";
@@ -165,19 +165,6 @@ export function GameClient({ match: initialMatch, round: initialRound, me, oppon
     });
   }
 
-  function handleAccept() {
-    startTransition(async () => {
-      const res = await acceptMatch(match.id);
-      if (!("error" in res)) {
-        const { data: matchData } = await supabase.from("matches").select("*").eq("id", match.id).single();
-        if (matchData) {
-          setMatch(matchData as MatchData);
-          if (matchData.current_round_id) await refreshState(matchData.current_round_id);
-        }
-      }
-    });
-  }
-
   function handleAbandon() {
     if (!confirm("Tem certeza que quer abandonar a partida?")) return;
     startTransition(async () => {
@@ -233,19 +220,10 @@ export function GameClient({ match: initialMatch, round: initialRound, me, oppon
         </div>
       )}
 
-      {/* Awaiting accept */}
+      {/* Aguardando início (estado transitório — partida já inicia automaticamente) */}
       {match.status === "aguardando" && (
         <div className="card-premium rounded-2xl p-5 text-center">
-          {me.id === match.player2_id ? (
-            <>
-              <p className="text-text-secondary mb-4">{opponent.display_name} te desafiou para uma partida!</p>
-              <button onClick={handleAccept} disabled={pending} className="btn-primary w-full py-3 rounded-xl font-semibold">
-                Aceitar desafio ✦
-              </button>
-            </>
-          ) : (
-            <p className="text-text-muted">Aguardando {opponent.display_name} aceitar o desafio…</p>
-          )}
+          <p className="text-text-muted">Iniciando partida…</p>
         </div>
       )}
 

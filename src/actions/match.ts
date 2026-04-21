@@ -54,6 +54,10 @@ export async function createMatch() {
     .single();
 
   if (error) return err(error.message);
+
+  // Auto-start immediately — no challenge/accept step needed
+  await startRound(match.id, me.id, opponent.id, 1, null);
+
   revalidatePath("/");
   return { matchId: match.id };
 }
