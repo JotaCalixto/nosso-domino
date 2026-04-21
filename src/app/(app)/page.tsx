@@ -54,7 +54,7 @@ export default async function HomePage() {
 
       {/* Score banner */}
       <div className="w-full card-premium rounded-2xl p-4">
-        <div className="flex items-center justify-between px-4">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 8 }}>
           <PlayerScore
             name={me.display_name}
             avatar={myConfig.avatarPath}
@@ -133,14 +133,14 @@ function PlayerScore({ name, avatar, wins, losses, isMe, slug }: {
   name: string; avatar: string; wins: number; losses: number; isMe: boolean; slug: string;
 }) {
   return (
-    <div className={`flex flex-col items-center gap-2 ${isMe ? "" : ""}`}>
-      <div className={`relative w-14 h-14 rounded-full border-2 overflow-hidden ${
+    <div className={`flex flex-col gap-1.5 ${isMe ? "items-center" : "items-center"}`}>
+      <div className={`relative w-12 h-12 rounded-full border-2 overflow-hidden flex-shrink-0 ${
         slug === "jota" ? "border-jota-500 shadow-jota" : "border-iza-400"
       }`}>
         <Image src={avatar} alt={name} fill className="object-cover" />
       </div>
-      <span className="text-text-primary text-sm font-semibold">{name}</span>
-      <span className="text-text-muted text-xs">{wins}V {losses}D</span>
+      <span className="text-text-primary text-sm font-semibold text-center">{name}</span>
+      <span className="text-text-muted text-xs text-center">{wins}V {losses}D</span>
     </div>
   );
 }
