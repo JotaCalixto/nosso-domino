@@ -35,6 +35,20 @@ export async function createMatch() {
   const me = await getAuthPlayer();
   const admin = createAdminClient();
 
+  // If there's already an active match in the system, just go to it
+  // (with only 2 players, any active match belongs to both of them)
+  const { data: existing } = await admin
+    .from("matches")
+    .select("id")
+    .in("status", ["aguardando", "em_andamento"])
+    .limit(1)
+    .maybeSingle();
+
+  if (existing) {
+    revalidatePath("/");
+    return { matchId: existing.id };
+  }
+
   // find opponent
   const { data: opponent } = await admin
     .from("players")

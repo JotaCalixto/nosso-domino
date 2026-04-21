@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getPlayerConfig, getOpponentSlug } from "@/lib/players";
+import { MatchWatcher } from "@/components/shell/MatchWatcher";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -42,6 +43,7 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-dvh flex flex-col items-center px-4 pt-8 pb-4 gap-6 max-w-md mx-auto">
+      <MatchWatcher />
 
       {/* Logo + title */}
       <div className="flex flex-col items-center gap-2">
