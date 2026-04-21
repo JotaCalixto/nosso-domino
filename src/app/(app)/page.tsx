@@ -54,7 +54,7 @@ export default async function HomePage() {
 
       {/* Score banner */}
       <div className="w-full card-premium rounded-2xl p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between px-4">
           <PlayerScore
             name={me.display_name}
             avatar={myConfig.avatarPath}

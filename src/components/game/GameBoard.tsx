@@ -12,8 +12,8 @@ const SEGMENT = TILES_PER_ROW + 1; // includes the corner tile
 
 // sm tile: horizontal → w=56, h=28 | vertical → w=28, h=56
 const ROW_H  = 28;  // height of each grid row
-const ROW_GAP = 8;  // visual gap between rows
-const CORNER_H = ROW_H * 2 + ROW_GAP; // corner spans 2 rows + gap = 64px
+const ROW_GAP = 24; // visual gap between rows
+const CORNER_H = ROW_H * 2 + ROW_GAP; // corner spans 2 rows + gap
 
 // Returns grid position and orientation for each tile in the chain
 function getTileProps(idx: number): {
