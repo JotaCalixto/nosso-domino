@@ -86,14 +86,18 @@ export function GameBoard({ chain }: GameBoardProps) {
               gap: TILE_GAP,
             }}
           >
-            {seg.tiles.map((tile, i) => (
-              <DominoTile
-                key={i}
-                tile={tile}
-                orientation={tile[0] === tile[1] ? "vertical" : "horizontal"}
-                size="sm"
-              />
-            ))}
+            {seg.tiles.map((tile, i) => {
+              const isDouble = tile[0] === tile[1];
+              if (isDouble) {
+                // Wrap double in a TILE_W-wide box so row widths stay consistent
+                return (
+                  <div key={i} style={{ width: TILE_W, flexShrink: 0, display: "flex", justifyContent: "center" }}>
+                    <DominoTile tile={tile} orientation="vertical" size="sm" />
+                  </div>
+                );
+              }
+              return <DominoTile key={i} tile={tile} orientation="horizontal" size="sm" />;
+            })}
             {seg.corner && (
               <DominoTile tile={seg.corner} orientation="vertical" size="sm" />
             )}
