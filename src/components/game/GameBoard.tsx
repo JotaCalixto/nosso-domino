@@ -14,7 +14,7 @@ const TILE_W = 56;
 const CORNER_W = 28;
 // Full board width = 5 tiles + 1 corner slot + 5 gaps
 const BOARD_W = TILES_PER_ROW * TILE_W + CORNER_W + TILES_PER_ROW * TILE_GAP;
-const ROW_GAP = 10;
+const ROW_GAP = 0;
 
 interface SegmentData {
   tiles: Tile[];
@@ -82,7 +82,7 @@ export function GameBoard({ chain }: GameBoardProps) {
               // LTR: tiles go left→right, corner at right end
               // RTL (row-reverse): first chain tile appears on RIGHT (adjacent to corner above), corner at left end
               flexDirection: seg.isLTR ? "row" : "row-reverse",
-              alignItems: "center",
+              alignItems: "flex-start",
               gap: TILE_GAP,
             }}
           >
