@@ -35,19 +35,22 @@ export async function createMatch() {
   const me = await getAuthPlayer();
   const admin = createAdminClient();
 
-  // If there's already an active match in the system, just go to it
-  // (with only 2 players, any active match belongs to both of them)
-  const { data: existing } = await admin
+  // Only reuse matches that are truly running (em_andamento)
+  // "aguardando" matches are stuck/incomplete — ignore them
+  const { data: active } = await admin
     .from("matches")
     .select("id")
-    .in("status", ["aguardando", "em_andamento"])
+    .eq("status", "em_andamento")
     .limit(1)
     .maybeSingle();
 
-  if (existing) {
+  if (active) {
     revalidatePath("/");
-    return { matchId: existing.id };
+    return { matchId: active.id };
   }
+
+  // Delete any leftover stuck matches before creating a fresh one
+  await admin.from("matches").delete().eq("status", "aguardando");
 
   // find opponent
   const { data: opponent } = await admin
@@ -69,8 +72,13 @@ export async function createMatch() {
 
   if (error) return err(error.message);
 
-  // Auto-start immediately — no challenge/accept step needed
-  await startRound(match.id, me.id, opponent.id, 1, null);
+  // Auto-start immediately
+  const roundResult = await startRound(match.id, me.id, opponent.id, 1, null);
+  if ("error" in roundResult) {
+    // Clean up the match if round failed
+    await admin.from("matches").delete().eq("id", match.id);
+    return err("Erro ao iniciar rodada: " + roundResult.error);
+  }
 
   revalidatePath("/");
   return { matchId: match.id };
