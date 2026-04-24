@@ -86,12 +86,16 @@ export function GameBoard({ chain }: GameBoardProps) {
               gap: TILE_GAP,
             }}
           >
-            {seg.tiles.map((tile, i) => (
-              // All chain tiles lie flat (horizontal) — including doubles.
-              // Only the corner/turn tile is vertical (perpendicular).
-              <DominoTile key={i} tile={tile} orientation="horizontal" size="sm" />
-            ))}
+            {seg.tiles.map((tile, i) => {
+              // In RTL rows (row-reverse) the tile faces the opposite direction,
+              // so swap [a,b] → [b,a] to keep the connecting pip on the correct side.
+              const displayed: typeof tile = seg.isLTR ? tile : [tile[1], tile[0]];
+              return <DominoTile key={i} tile={displayed} orientation="horizontal" size="sm" />;
+            })}
             {seg.corner && (
+              // Corner connects: top half → current row's last tile, bottom half → next row's first tile.
+              // In LTR rows the corner is [a,b] with a on top (connecting left) and b on bottom (connecting right-next).
+              // No flip needed — applyPlay already oriented tiles so the chain reads top-to-bottom through the corner.
               <DominoTile tile={seg.corner} orientation="vertical" size="sm" />
             )}
           </div>
