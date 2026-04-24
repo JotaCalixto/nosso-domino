@@ -128,18 +128,61 @@ export function GameClient({ match: initialMatch, round: initialRound, me, oppon
     if (matchData) setMatch(matchData as MatchData);
   }
 
+  // Helper: handle a server action result that may have ended the round.
+  // For the WINNER the realtime event races with refreshState(oldRoundId) and
+  // can leave stale state. We bypass that by directly fetching modal data from
+  // the finished round and then loading the new round in one controlled sequence.
+  async function handleRoundResult(res: Record<string, unknown>, oldRoundId: string) {
+    if ("roundOver" in res) {
+      // Fetch the latest match (has new scores + current_round_id)
+      const { data: freshMatch } = await supabase
+        .from("matches").select("*").eq("id", match.id).single();
+      if (freshMatch) setMatch(freshMatch as MatchData);
+
+      if (res.matchOver && freshMatch) {
+        setResult({
+          type: "match",
+          winnerId: (freshMatch as MatchData).winner_id!,
+          score1: (freshMatch as MatchData).score_player1,
+          score2: (freshMatch as MatchData).score_player2,
+        });
+      } else {
+        // Fetch finished round for modal data (points, reason, winner)
+        const { data: oldRound } = await supabase
+          .from("rounds")
+          .select("round_winner_id, points_earned, status")
+          .eq("id", oldRoundId)
+          .single();
+        if (oldRound) {
+          setResult({
+            type: "round",
+            winnerId: oldRound.round_winner_id!,
+            points: oldRound.points_earned ?? 0,
+            reason: oldRound.status === "encerrada_batida" ? "batida" : "travada",
+          });
+        }
+        // Load new round so the game is ready when modal is dismissed
+        const newRoundId = (freshMatch as MatchData | null)?.current_round_id;
+        if (newRoundId && newRoundId !== oldRoundId) {
+          await refreshState(newRoundId);
+        }
+      }
+    } else {
+      await refreshState(oldRoundId);
+    }
+  }
+
   function handlePlay(tile: Tile, side: BoardSide) {
     if (!round) return;
     const roundId = round.id;
-    setDebugMsg("roundId=" + roundId);
     startTransition(async () => {
       try {
         const res = await playPiece(roundId, tile, side);
         if ("error" in res) {
-          setDebugMsg("roundId=" + roundId + " | Erro: " + res.error);
+          setDebugMsg("Erro: " + res.error);
           return;
         }
-        await refreshState(roundId);
+        await handleRoundResult(res as Record<string, unknown>, roundId);
         setDebugMsg(null);
       } catch (e) {
         setDebugMsg("Exceção: " + String(e));
@@ -161,7 +204,8 @@ export function GameClient({ match: initialMatch, round: initialRound, me, oppon
     const roundId = round.id;
     startTransition(async () => {
       const res = await passTurn(roundId);
-      if (!("error" in res)) await refreshState(roundId);
+      if ("error" in res) return;
+      await handleRoundResult(res as Record<string, unknown>, roundId);
     });
   }
 
