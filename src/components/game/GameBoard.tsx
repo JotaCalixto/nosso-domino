@@ -62,7 +62,7 @@ export function GameBoard({ chain }: GameBoardProps) {
       <div className="felt-table rounded-2xl" style={{ minHeight: 80, display: "flex", alignItems: "center", justifyContent: "center", padding: "10px 16px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: TILE_GAP }}>
           {chain.map((tile, i) => (
-            <DominoTile key={i} tile={tile} orientation={tile[0] === tile[1] ? "vertical" : "horizontal"} size="sm" />
+            <DominoTile key={i} tile={tile} orientation="horizontal" size="sm" />
           ))}
         </div>
       </div>
@@ -86,18 +86,11 @@ export function GameBoard({ chain }: GameBoardProps) {
               gap: TILE_GAP,
             }}
           >
-            {seg.tiles.map((tile, i) => {
-              const isDouble = tile[0] === tile[1];
-              if (isDouble) {
-                // Wrap double in a TILE_W-wide box so row widths stay consistent
-                return (
-                  <div key={i} style={{ width: TILE_W, flexShrink: 0, display: "flex", justifyContent: "center" }}>
-                    <DominoTile tile={tile} orientation="vertical" size="sm" />
-                  </div>
-                );
-              }
-              return <DominoTile key={i} tile={tile} orientation="horizontal" size="sm" />;
-            })}
+            {seg.tiles.map((tile, i) => (
+              // All chain tiles lie flat (horizontal) — including doubles.
+              // Only the corner/turn tile is vertical (perpendicular).
+              <DominoTile key={i} tile={tile} orientation="horizontal" size="sm" />
+            ))}
             {seg.corner && (
               <DominoTile tile={seg.corner} orientation="vertical" size="sm" />
             )}
